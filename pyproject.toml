@@ -1,0 +1,10 @@
+[project]
+name = "hotel-res-prediction"
+version = "0.1.0"
+description = "Pipele for predicting hotel reservations with MLFlow-Jenkins and GCP deployment"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = ["ruff>=0.13.0"]
