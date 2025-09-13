@@ -10,10 +10,10 @@ logger = get_logger(__name__)
 
 def read_yaml(file_path):
     try:
-        if not Path.exists(file_path):
+        if not Path(file_path).exists():
             raise FileNotFoundError(f"file {file_path} not found")
 
-        with Path.open(file_path, "r") as yml_file:
+        with Path(file_path).open("r") as yml_file:
             config = yaml.safe_load(yml_file)
             logger.info("YAML file successfully read")
             return config
