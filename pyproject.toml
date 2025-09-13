@@ -4,7 +4,11 @@ version = "0.1.0"
 description = "Pipele for predicting hotel reservations with MLFlow-Jenkins and GCP deployment"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "google-cloud-storage>=3.3.1",
+    "pandas>=2.3.2",
+    "scikit-learn>=1.7.2",
+]
 
 [dependency-groups]
 dev = ["ruff>=0.13.0"]
