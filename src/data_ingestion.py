@@ -65,7 +65,7 @@ class DataIngestion:
             test_data.to_csv(TEST_FILE_PATH, index=False)  # type:ignore
 
             logger.info("Train data saved to %s", TRAIN_FILE_PATH)
-            logger.info("Train data saved to %s", TRAIN_FILE_PATH)
+            logger.info("Test data saved to %s", TEST_FILE_PATH)
 
         except Exception as e:
             logger.error("Error while splitting the data")
