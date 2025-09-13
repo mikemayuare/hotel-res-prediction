@@ -1,6 +1,9 @@
 # Created by https://gitignore.org
 # Python.gitignore
 
+# credentials
+credentials
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
