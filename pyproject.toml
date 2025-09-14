@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "google-cloud-storage>=3.3.1",
+    "imbalanced-learn>=0.14.0",
+    "lightgbm>=4.6.0",
     "pandas>=2.3.2",
     "python-dotenv>=1.1.1",
     "pyyaml>=6.0.2",
