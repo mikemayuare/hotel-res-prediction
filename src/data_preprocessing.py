@@ -1,11 +1,11 @@
-import os
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from imblearn.over_sampling import SMOTE
+from scipy.stats import skew
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from scipy.sparse import hstack
 
 import config.paths_config
 from src.custom_exceptions import CustomException
@@ -14,8 +14,11 @@ from utils.common_functions import load_data, read_yaml
 
 logger = get_logger(__name__)
 
+
 class DataProcesser:
-    def __init__(self, train_path: Path, test_path: Path, processed_dir: Path, config_path: Path) -> None:
+    def __init__(
+        self, train_path: Path, test_path: Path, processed_dir: Path, config_path: Path
+    ) -> None:
         """
 
         Args:
@@ -43,14 +46,45 @@ class DataProcesser:
             cat_cols = self.config["data_preprocessing"]["categorical_columns"]
             num_cols = self.config["data_preprocessing"]["numerical_columns"]
 
-            logger.info("Applying preprocesing")
-            ohe = OneHotEncoder(drop="first")
+            logger.info("Applying preprocessing")
+            ohe = OneHotEncoder(drop="first", sparse_output=False)
             x_cat = ohe.fit_transform(df[cat_cols])
             logger.info("Categorical column preprocessed")
 
             logger.info("Preprocessing numerical columns")
+            skew_threshold = self.config["data_preprocessing"]["skewness_threshold"]
+            skewness = df[num_cols].skew()
+            skewed_cols = skewness[skewness > skew_threshold].index
+            df[skewed_cols] = np.log1p(df[skewed_cols])
+
             ss = StandardScaler()
             x_num = ss.fit_transform(df[num_cols])
             logger.info("Numerical columns preprocessed")
 
-            processed_data = hstack(x_cat, x_num)
+            cat_feature_names = ohe.get_feature_names_out(cat_cols)
+            df = pd.DataFrame(
+                np.hstack([x_num, x_cat]), columns=num_cols + list(cat_feature_names)
+            )
+            return df
+
+        except Exception as e:
+            logger.error("%s - Error during preprocesing", str(e))
+            raise CustomException("Error while preprocessing") from e
+
+    def balance_data(self, df):
+        try:
+            logger.info("Handling imbalanced data")
+            x = df.drop(columns=df.columns[-1])
+            y = df[df.columns[-1]]
+
+            smote = SMOTE(random_state=42)
+            x_resampled, y_resampled = smote.fit_resample(x, y)
+            balanced_df = pd.DataFrame(x_resampled, columns=x.columns)
+            balanced_df["booking_status"] = y_resampled
+
+            logger.info("Data balanced successfully")
+            return balanced_df
+
+        except Exception as e:
+            logger.error("%s - Error while balancing data", str(e))
+            raise CustomException("Error while balancing data") from e
