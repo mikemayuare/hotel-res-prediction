@@ -14,7 +14,6 @@ from utils.common_functions import load_data, read_yaml
 
 logger = get_logger(__name__)
 
-
 class DataProcesser:
     def __init__(
         self, train_path: Path, test_path: Path, processed_dir: Path, config_path: Path
@@ -48,10 +47,12 @@ class DataProcesser:
 
             logger.info("Applying preprocessing")
             ohe = OneHotEncoder(drop="first", sparse_output=False)
+            
             x_cat = ohe.fit_transform(df[cat_cols])
             logger.info("Categorical column preprocessed")
 
             logger.info("Preprocessing numerical columns")
+
             skew_threshold = self.config["data_preprocessing"]["skewness_threshold"]
             skewness = df[num_cols].skew()
             skewed_cols = skewness[skewness > skew_threshold].index
