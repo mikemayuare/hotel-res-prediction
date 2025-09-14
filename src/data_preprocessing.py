@@ -80,7 +80,7 @@ class DataProcesser:
         Apply SMOTE to balance the dataset.
         Converts sparse + dense features to dense for SMOTE.
         Returns:
-            X_resampled: balanced features (dense)
+            x_resampled: balanced features (dense)
             y_resampled: balanced target
         """
         try:
@@ -94,8 +94,55 @@ class DataProcesser:
             x_resampled, y_resampled = smote.fit_resample(x_combined, y)
 
             logger.info("Data balanced successfully")
+
             return x_resampled, y_resampled
 
         except Exception as e:
             logger.error("%s - Error during balancing data", str(e))
             raise CustomException("Error while balancing data") from e
+
+    def select_features(self, x: pd.DataFrame, y: pd.Series):
+        """
+        Select top features using feature importance from a RandomForestClassifier.
+
+        Args:
+            x: Feature DataFrame
+            y: Target Series
+
+        Returns:
+            top_features_df: DataFrame with selected features + target column
+        """
+        try:
+            logger.info("Starting feature selection step")
+
+            model = RandomForestClassifier(random_state=42)
+            model.fit(x, y)
+
+            feature_importance = model.feature_importances_
+            feature_importance_df = pd.DataFrame(
+                {"feature": x.columns, "importance": feature_importance}
+            )
+
+            top_features_importance_df = feature_importance_df.sort_values(
+                by="importance", ascending=False
+            )
+
+            num_features_to_select = self.config["data_processing"]["no_of_features"]
+            top_features = (
+                top_features_importance_df["feature"]
+                .head(num_features_to_select)
+                .values
+            )
+
+            logger.info("Features selected: %s", top_features)
+
+            # Return DataFrame with selected features + target
+            top_features_df = pd.DataFrame(x[top_features], columns=top_features)
+            top_features_df["booking_status"] = y.values
+
+            logger.info("Feature selection completed successfully")
+            return top_features_df
+
+        except Exception as e:
+            logger.error("%s - Error during feature selection", str(e))
+            raise CustomException("Error while selecting features") from e
