@@ -14,78 +14,88 @@ from utils.common_functions import load_data, read_yaml
 
 logger = get_logger(__name__)
 
+
 class DataProcesser:
     def __init__(
         self, train_path: Path, test_path: Path, processed_dir: Path, config_path: Path
     ) -> None:
-        """
-
-        Args:
-            train_path: Training data file path
-            test_path: Test data file path
-            processed_dir: Directory to store processed files
-            config_path: Path of the config YAML file
-        """
         self.train_path = train_path
         self.test_path = test_path
         self.processed_dir = processed_dir
         self.config = read_yaml(config_path)
 
-        if not Path(self.processed_dir).exists():
-            Path(self.processed_dir).mkdir(parents=True, exist_ok=True)
+        Path(self.processed_dir).mkdir(parents=True, exist_ok=True)
 
     def preprocess_data(self, df: pd.DataFrame):
+        """
+        Preprocess the dataset:
+        - Drop ID column and duplicates
+        - One-hot encode categorical features (sparse)
+        - Log-transform skewed numeric columns
+        - Standard scale numeric columns
+        Returns:
+            x_num: scaled numeric features (dense)
+            x_cat: encoded categorical features (sparse)
+            feature_names: list of column names for later use
+        """
         try:
-            logger.info("Starting data processing")
-            logger.info("Dropping ID column")
-
+            logger.info("Starting data preprocessing")
             df = df.drop(columns="Booking_ID")
             df = df.drop_duplicates()
 
             cat_cols = self.config["data_preprocessing"]["categorical_columns"]
             num_cols = self.config["data_preprocessing"]["numerical_columns"]
 
-            logger.info("Applying preprocessing")
-            ohe = OneHotEncoder(drop="first", sparse_output=False)
-            
+            # --------------------
+            # Categorical preprocessing
+            # --------------------
+            ohe = OneHotEncoder(drop="first", sparse=True)  # keep sparse for memory
             x_cat = ohe.fit_transform(df[cat_cols])
-            logger.info("Categorical column preprocessed")
+            cat_feature_names = ohe.get_feature_names_out(cat_cols)
+            logger.info("Categorical columns preprocessed (sparse)")
 
-            logger.info("Preprocessing numerical columns")
-
+            # --------------------
+            # Numerical preprocessing
+            # --------------------
             skew_threshold = self.config["data_preprocessing"]["skewness_threshold"]
             skewness = df[num_cols].skew()
             skewed_cols = skewness[skewness > skew_threshold].index
-            df[skewed_cols] = np.log1p(df[skewed_cols])
+
+            # Safe log transform for numeric skewed features
+            for col in skewed_cols:
+                df[col] = np.sign(df[col]) * np.log1p(np.abs(df[col]))
 
             ss = StandardScaler()
             x_num = ss.fit_transform(df[num_cols])
             logger.info("Numerical columns preprocessed")
 
-            cat_feature_names = ohe.get_feature_names_out(cat_cols)
-            df = pd.DataFrame(
-                np.hstack([x_num, x_cat]), columns=num_cols + list(cat_feature_names)
-            )
-            return df
+            return x_num, x_cat, num_cols, cat_feature_names
 
         except Exception as e:
-            logger.error("%s - Error during preprocesing", str(e))
+            logger.error("%s - Error during preprocessing", str(e))
             raise CustomException("Error while preprocessing") from e
 
-    def balance_data(self, df):
+    def balance_data(self, x_num, x_cat, y):
+        """
+        Apply SMOTE to balance the dataset.
+        Converts sparse + dense features to dense for SMOTE.
+        Returns:
+            X_resampled: balanced features (dense)
+            y_resampled: balanced target
+        """
         try:
-            logger.info("Handling imbalanced data")
-            x = df.drop(columns=df.columns[-1])
-            y = df[df.columns[-1]]
+            logger.info("Handling imbalanced data with SMOTE")
+
+            # Convert sparse + dense to a single dense matrix
+
+            x_combined = hstack([x_cat, x_num]).toarray()
 
             smote = SMOTE(random_state=42)
-            x_resampled, y_resampled = smote.fit_resample(x, y)
-            balanced_df = pd.DataFrame(x_resampled, columns=x.columns)
-            balanced_df["booking_status"] = y_resampled
+            x_resampled, y_resampled = smote.fit_resample(x_combined, y)
 
             logger.info("Data balanced successfully")
-            return balanced_df
+            return x_resampled, y_resampled
 
         except Exception as e:
-            logger.error("%s - Error while balancing data", str(e))
+            logger.error("%s - Error during balancing data", str(e))
             raise CustomException("Error while balancing data") from e
