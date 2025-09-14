@@ -146,3 +146,13 @@ class DataProcesser:
         except Exception as e:
             logger.error("%s - Error during feature selection", str(e))
             raise CustomException("Error while selecting features") from e
+
+    def save_data(self, df: pd.DataFrame, file_path: Path) -> None:
+        try:
+            logger.info("Saving dta in processed folder")
+            df.to_parquet(file_path)
+            logger.info("Data saved on %s", str(file_path))
+
+        except Exception as e:
+            logger.error("%s - Error during saving file", str(e))
+            raise CustomException("Error while saving processed file") from e
