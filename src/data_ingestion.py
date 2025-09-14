@@ -61,8 +61,8 @@ class DataIngestion:
                 random_state=42,
             )
 
-            train_data.to_csv(TRAIN_FILE_PATH, index=False)  # type:ignore
-            test_data.to_csv(TEST_FILE_PATH, index=False)  # type:ignore
+            train_data.to_parquet(TRAIN_FILE_PATH)  # type:ignore
+            test_data.to_parquet(TEST_FILE_PATH)  # type:ignore
 
             logger.info("Train data saved to %s", TRAIN_FILE_PATH)
             logger.info("Test data saved to %s", TEST_FILE_PATH)
