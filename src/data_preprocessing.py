@@ -44,7 +44,7 @@ class DataProcesser:
             # --------------------
             # Extract and encode target
             # --------------------
-            target_col = "booking_status"
+            target_col = self.config["data_processing"]["target"]
             y_raw = df[target_col]
 
             le = LabelEncoder()
