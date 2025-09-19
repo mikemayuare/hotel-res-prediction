@@ -44,8 +44,8 @@ class DataProcesser:
             # --------------------
             # Extract and encode target
             # --------------------
-            target_col = self.config["data_processing"]["target"]
-            y_raw = df[target_col]
+            self.target_col = self.config["data_processing"]["target"]
+            y_raw = df[self.target_col]
             le = LabelEncoder()
             y = le.fit_transform(y_raw)
             self.target_encoder = le  # save encoder for inverse_transform later
@@ -85,7 +85,7 @@ class DataProcesser:
             feature_names = num_cols + list(self.cat_feature_names)
             x = np.hstack([x_num, x_cat])
             x = pd.DataFrame(x, columns=feature_names)
-            y = pd.Series(y, name=target_col)
+            y = pd.Series(y, name=self.target_col)
 
             return x, y
 
@@ -180,7 +180,6 @@ class DataProcesser:
             logger.info("Features selected: %s", top_features)
 
             # Return DataFrame with selected features + target
-            print(x.columns)
             logger.info("Feature selection completed successfully")
             return x, selected_columns
 
@@ -241,9 +240,9 @@ class DataProcesser:
             x_test = x_test[top_features]
 
             train_df = x_train
-            train_df["target"] = y_train
+            train_df[self.target_col] = y_train
             test_df = x_test
-            test_df["target"] = y_test
+            test_df[self.target_col] = y_test
             # --------------------
             # Save outputs
             # --------------------
