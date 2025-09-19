@@ -10,6 +10,6 @@ TEST_FILE_PATH = Path(f"{RAW_DIR}/test.parquet")
 CONFIG_PATH = Path("config/config.yaml")
 
 # data processing
-PROCESSED_DIR = "artifacts/processed"
+PROCESSED_DIR = Path("artifacts/processed")
 PROCESSED_TRAIN_DATA_PATH = Path(f"{PROCESSED_DIR}/processed_train.parquet")
 PROCESSED_TEST_DATA_PATH = Path(f"{PROCESSED_DIR}/processed_test.parquet")
