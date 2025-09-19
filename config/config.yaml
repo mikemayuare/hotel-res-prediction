@@ -10,7 +10,6 @@ data_processing:
     - room_type_reserved
     - market_segment_type
     - repeated_guest
-    - booking_status
   numerical_columns:
     - no_of_adults
     - no_of_children

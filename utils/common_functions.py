@@ -50,7 +50,7 @@ def load_data(file_path: Path) -> pd.DataFrame:
     """
     try:
         logger.info("Loading data")
-        return pd.read_csv(file_path)
+        return pd.read_parquet(file_path)
     except Exception as e:
         logger.error("%s - Error loading the data", str(e))
         raise CustomException("Failed to load data") from e
