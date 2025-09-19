@@ -44,7 +44,7 @@ class DataProcesser:
             # --------------------
             # Extract and encode target
             # --------------------
-            self.target_col = self.config["data_processing"]["target"]
+            self.target_col: str = self.config["data_processing"]["target"]
             y_raw = df[self.target_col]
             le = LabelEncoder()
             y = le.fit_transform(y_raw)
