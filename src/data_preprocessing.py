@@ -44,9 +44,8 @@ class DataProcesser:
             # --------------------
             # Extract and encode target
             # --------------------
-            target_col = "booking_status"
+            target_col = self.config["data_processing"]["target"]
             y_raw = df[target_col]
-
             le = LabelEncoder()
             y = le.fit_transform(y_raw)
             self.target_encoder = le  # save encoder for inverse_transform later
@@ -60,8 +59,16 @@ class DataProcesser:
             # Categorical preprocessing
             ohe = OneHotEncoder(drop="first", sparse_output=False)
             x_cat = ohe.fit_transform(df[cat_cols])
-            cat_feature_names = ohe.get_feature_names_out(cat_cols)
+            self.cat_feature_names = ohe.get_feature_names_out(cat_cols)
             logger.info("Categorical columns preprocessed (sparse)")
+
+            # Mapping from original categorical → encoded features
+            self.cat_mapping = {
+                original: [
+                    f for f in self.cat_feature_names if f.startswith(original + "_")
+                ]
+                for original in cat_cols
+            }
 
             # Numerical preprocessing
             skew_threshold = self.config["data_processing"]["skewness_threshold"]
@@ -75,8 +82,9 @@ class DataProcesser:
             x_num = ss.fit_transform(df[num_cols])
             logger.info("Numerical columns preprocessed")
 
+            feature_names = num_cols + list(self.cat_feature_names)
             x = np.hstack([x_num, x_cat])
-            x = pd.DataFrame(x, columns=num_cols + list(ohe.get_feature_names_out()))
+            x = pd.DataFrame(x, columns=feature_names)
             y = pd.Series(y, name=target_col)
 
             return x, y
@@ -137,6 +145,16 @@ class DataProcesser:
             feature_importance_df = pd.DataFrame(
                 {"feature": x.columns, "importance": feature_importance}
             )
+
+            def map_to_original(f):
+                for orig, cols in self.cat_mapping.items():
+                    if f in cols:
+                        return orig
+                return f
+
+            feature_importance_df["original_feature"] = feature_importance_df[
+                "feature"
+            ].map(map_to_original)
 
             top_features_importance_df = feature_importance_df.sort_values(
                 by="importance", ascending=False
