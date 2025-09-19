@@ -156,24 +156,33 @@ class DataProcesser:
                 "feature"
             ].map(map_to_original)
 
-            top_features_importance_df = feature_importance_df.sort_values(
-                by="importance", ascending=False
-            )
-
             num_features_to_select = self.config["data_processing"]["no_of_features"]
             top_features = (
-                top_features_importance_df["feature"]
-                .head(num_features_to_select)
-                .tolist()
+                feature_importance_df.groupby("original_feature")["importance"]
+                .sum()
+                .sort_values(ascending=False)
+                .reset_index()
             )
 
+            selected_original = top_features.head(num_features_to_select)[
+                "original_feature"
+            ]
+
+            selected_columns = []
+            for orig in selected_original:
+                if orig in x.columns:  # numerical
+                    selected_columns.append(orig)
+                elif orig in self.cat_mapping:  # categorical
+                    selected_columns.extend(self.cat_mapping[orig])
+
+            # Filter X
+            x = x[selected_columns]
             logger.info("Features selected: %s", top_features)
 
             # Return DataFrame with selected features + target
-            x = x[top_features]
-
+            print(x.columns)
             logger.info("Feature selection completed successfully")
-            return x, top_features
+            return x, selected_columns
 
         except Exception as e:
             logger.error("%s - Error during feature selection", str(e))
