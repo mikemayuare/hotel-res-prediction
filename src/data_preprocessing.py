@@ -23,7 +23,7 @@ class DataProcesser:
         self.processed_dir = processed_dir
         self.config = read_yaml(config_path)
 
-        Path(self.processed_dir).mkdir(parents=True, exist_ok=True)
+        self.processed_dir.mkdir(parents=True, exist_ok=True)
 
     def preprocess_data(self, df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
         """
