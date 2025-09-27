@@ -30,7 +30,7 @@ class DataIngestion:
         self.file_name = self.config["bucket_file_name"]
         self.train_ratio = self.config["train_ratio"]
 
-        Path(RAW_DIR).mkdir(exist_ok=True)
+        RAW_DIR.mkdir(exist_ok=True)
         logger.info(
             "Data ingestion started with %s and file is %s",
             self.bucket_name,
