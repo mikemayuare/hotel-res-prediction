@@ -15,4 +15,5 @@ PROCESSED_TRAIN_DATA_PATH = Path(f"{PROCESSED_DIR}/processed_train.parquet")
 PROCESSED_TEST_DATA_PATH = Path(f"{PROCESSED_DIR}/processed_test.parquet")
 
 # Model training
-MODEL_OUPUT_PATH = Path("artifacts/models/lgbm_model.pkl")
+MODEL_OUPUT_PATH = Path("artifacts/models")
+MODEL_FILE_NAME = Path("model.pkl")
