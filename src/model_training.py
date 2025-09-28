@@ -1,3 +1,36 @@
+from pathlib import Path
+import pandas as pd
+import numpy as np
+import joblib
+import optuna
+import sklearn
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+import lightgbm as lgb
+from sklearn.model_selection import train_test_split
+from src.logger import get_logger
+from src.custom_exceptions import CustomException
+from config import paths_config as pc
+from config.model_params import lgbm_search_space
+from utils.common_functions import read_yaml, load_data
+from optuna.integration import LightGBMPruningCallback
+
+
+logger = get_logger(__name__)
+
+
+class ModelTraining:
+    def __init__(
+        self,
+        train_path: Path,
+        test_path: Path,
+        model_output_path: Path,
+        config_path: Path,
+    ) -> None:
+        self.train_path = train_path
+        self.test_path = test_path
+        self.model_output_path = model_output_path
+        self.config = read_yaml(config_path)
+        self.target: str = self.config["data+prcessing"]["target"]
 
     def load_and_split(self):
         try:
