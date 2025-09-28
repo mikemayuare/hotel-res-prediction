@@ -31,6 +31,10 @@ class ModelTraining:
         self.model_output_path = model_output_path
         self.config = read_yaml(config_path)
         self.target: str = self.config["data+prcessing"]["target"]
+        self.accuracy: float
+        self.precision: float
+        self.recall: float
+        self.f1: float
 
     def load_and_split(self):
         try:
@@ -123,3 +127,23 @@ class ModelTraining:
         except Exception as e:
             logger.error("%s - error while training the model")
             raise CustomException("Error while training the model") from e
+
+    def model_evaluation(self, model, x_test, y_test):
+        try:
+            logger.info("Evaluating model")
+
+            y_pred = model.predict(x_test, y_test)
+
+            self.accuracy = accuracy_score(y_test, y_pred)
+            self.precision = precision_score(y_test, y_pred)
+            self.recall = recall_score(y_test, y_pred)
+            self.f1 = f1_score(y_test, y_pred)
+
+            log.info("Accuracy %", self.accuracy)
+            log.info("Precision %", self.precision)
+            log.info("Recall %", self.recall)
+            log.info("F1 %", self.f1)
+
+        except Exception as e:
+            logger.error("%s, Error evaluating model", e)
+            raise CustomException("Error evaluating model") from e
