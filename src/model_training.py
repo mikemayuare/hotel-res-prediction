@@ -114,7 +114,7 @@ class ModelTraining:
             dtrain = lgb.Dataset(x_train, label=y_train)
             dvalid = lgb.Dataset(x_val, label=y_val)
 
-            model = lgb.train(
+            self.model = lgb.train(
                 params,
                 dtrain,
                 valid_sets=[dvalid],
@@ -123,7 +123,8 @@ class ModelTraining:
                 ],
             )
 
-            model.save_model(pc.MODEL_OUPUT_PATH)
+            return self.model
+
         except Exception as e:
             logger.error("%s - error while training the model")
             raise CustomException("Error while training the model") from e
@@ -147,3 +148,14 @@ class ModelTraining:
         except Exception as e:
             logger.error("%s, Error evaluating model", e)
             raise CustomException("Error evaluating model") from e
+
+    def save_model(self, model):
+        try:
+            logger.info("Saving model to %s", self.model_output_path)
+            self.model_output_path.mkdir(exist_ok=True)
+
+            joblib.dump(model, self.model_output_path)
+
+        except Exception as e:
+            logger.error("%s, Error saving model", e)
+            raise CustomException("Error saving model") from e
