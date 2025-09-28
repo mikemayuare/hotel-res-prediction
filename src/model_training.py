@@ -139,10 +139,10 @@ class ModelTraining:
             self.recall = recall_score(y_test, y_pred)
             self.f1 = f1_score(y_test, y_pred)
 
-            log.info("Accuracy %", self.accuracy)
-            log.info("Precision %", self.precision)
-            log.info("Recall %", self.recall)
-            log.info("F1 %", self.f1)
+            logger.info("Accuracy %", self.accuracy)
+            logger.info("Precision %", self.precision)
+            logger.info("Recall %", self.recall)
+            logger.info("F1 %", self.f1)
 
         except Exception as e:
             logger.error("%s, Error evaluating model", e)
