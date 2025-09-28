@@ -9,7 +9,7 @@ from src.logger import get_logger
 logger = get_logger(__name__)
 
 
-def read_yaml(file_path: Path) -> None:
+def read_yaml(file_path: Path) -> dict:
     """Reads a YAML file
 
     Args:

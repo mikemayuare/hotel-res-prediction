@@ -25,12 +25,13 @@ logger = get_logger(__name__)
 
 class DataIngestion:
     def __init__(self, config):
-        self.config = config["data_ingestion"]
-        self.bucket_name = self.config["bucket_name"]
-        self.file_name = self.config["bucket_file_name"]
-        self.train_ratio = self.config["train_ratio"]
+        self.config = config
+        self.bucket_name = self.config["data_ingestion"]["bucket_name"]
+        self.file_name = self.config["data_ingestion"]["bucket_file_name"]
+        self.train_ratio = self.config["data_ingestion"]["train_ratio"]
+        self.target = self.config["data_processing"]["target"]
 
-        Path(RAW_DIR).mkdir(exist_ok=True)
+        RAW_DIR.mkdir(exist_ok=True)
         logger.info(
             "Data ingestion started with %s and file is %s",
             self.bucket_name,
@@ -54,13 +55,21 @@ class DataIngestion:
         try:
             logger.info("Starting the data splitting")
             data = pd.read_csv(RAW_FILE_PATH)
+            x = data.drop(columns=[self.target])
+            y = data[self.target]
 
-            train_data, test_data = train_test_split(
-                data,
+            x_train, x_test, y_train, y_test = train_test_split(
+                x,
+                y,
                 train_size=self.train_ratio,
+                stratify=y,
                 random_state=42,
             )
 
+            train_data = x_train
+            train_data[self.target] = y_train
+            test_data = x_test
+            test_data[self.target] = y_test
             train_data.to_parquet(TRAIN_FILE_PATH)  # type:ignore
             test_data.to_parquet(TEST_FILE_PATH)  # type:ignore
 
