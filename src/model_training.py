@@ -107,7 +107,7 @@ class ModelTraining:
     def train_model(self, x_train, y_train, x_val, y_val):
         try:
             study = optuna.create_study(direction="maximize")
-            study.optimize(objective, n_trials=50, n_jobs=-1)
+            study.optimize(self.objective, n_trials=50, n_jobs=-1)
 
             params = study.best_params
 
@@ -159,3 +159,23 @@ class ModelTraining:
         except Exception as e:
             logger.error("%s, Error saving model", e)
             raise CustomException("Error saving model") from e
+
+    def run_training_pipeline(self):
+        try:
+            logger.info("Running training pipeline")
+
+            # LOAD DATA #
+            x_train, x_val, x_test, y_train, y_val, y_test = self.load_and_split()
+
+            # TRAIN DATA #
+            self.train_model(x_train, y_train, x_val, y_val)
+
+            # EVALUATE DATA #
+            self.model_evaluation(self.model, x_test, y_test)
+
+            # SAVE MODEL #
+            self.save_model(self.model)
+
+        except Exception as e:
+            logger.error("%s - Error during pipeline", e)
+            raise CustomException("Error running the pipeline, check logs") from e
