@@ -101,21 +101,25 @@ class ModelTraining:
             raise CustomException("Error while tunning") from e
 
     def train_model(self, x_train, y_train, x_val, y_val):
-        study = optuna.create_study(direction="maximize")
-        study.optimize(objective, n_trials=50, n_jobs=-1)
+        try:
+            study = optuna.create_study(direction="maximize")
+            study.optimize(objective, n_trials=50, n_jobs=-1)
 
-        params = study.best_params
+            params = study.best_params
 
-        dtrain = lgb.Dataset(x_train, label=y_train)
-        dvalid = lgb.Dataset(x_val, label=y_val)
+            dtrain = lgb.Dataset(x_train, label=y_train)
+            dvalid = lgb.Dataset(x_val, label=y_val)
 
-        model = lgb.train(
-            params,
-            dtrain,
-            valid_sets=[dvalid],
-            callbacks=[
-                lgb.early_stopping(stopping_rounds=30),
-            ],
-        )
+            model = lgb.train(
+                params,
+                dtrain,
+                valid_sets=[dvalid],
+                callbacks=[
+                    lgb.early_stopping(stopping_rounds=30),
+                ],
+            )
 
-        model.save_model(pc.MODEL_OUPUT_PATH)
+            model.save_model(pc.MODEL_OUPUT_PATH)
+        except Exception as e:
+            logger.error("%s - error while training the model")
+            raise CustomException("Error while training the model") from e
