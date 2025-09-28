@@ -34,6 +34,7 @@ class ModelTraining:
         self.model_filename = model_filename
         self.config = read_yaml(config_path)
         self.target: str = self.config["data_processing"]["target"]
+        self.cat_cols = self.config["data_processing"]["categorical_columns"]
         self.accuracy: float
         self.precision: float
         self.recall: float
@@ -99,24 +100,29 @@ class ModelTraining:
 
     def train_model(self):
         try:
-            self.dtrain = lgb.Dataset(self.x_train, label=self.y_train)
-            self.dvalid = lgb.Dataset(self.x_val, label=self.y_val)
-            study = optuna.create_study(direction="maximize")
-            study.optimize(
-                self.objective, n_trials=50, n_jobs=1, show_progress_bar=True
+            logger.info("Training started")
+
+            cat_cols = list(set(self.x_train.columns) & set(self.cat_cols))
+
+            self.dtrain = lgb.Dataset(
+                self.x_train, label=self.y_train, categorical_feature=cat_cols
             )
+            self.dvalid = lgb.Dataset(
+                self.x_val, label=self.y_val, categorical_feature=cat_cols
+            )
+            study = optuna.create_study(direction="maximize")
+            study.optimize(self.objective, n_trials=50, show_progress_bar=True)
 
             params = study.best_params
+            params["boosting_type"] = "dart"
 
             self.model = lgb.train(
                 params,
                 self.dtrain,
                 num_boost_round=1000,
                 valid_sets=[self.dvalid],
-                callbacks=[
-                    lgb.early_stopping(stopping_rounds=100),
-                ],
             )
+            logger.info("Training finished")
 
             return self.model
 
