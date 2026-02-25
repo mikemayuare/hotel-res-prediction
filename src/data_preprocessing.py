@@ -170,10 +170,11 @@ class DataProcesser:
             x_test = x_test[top_features]
 
             # Save processed data
-            train_df = x_train.copy()
-            train_df[self.target_col] = y_train
-            test_df = x_test.copy()
-            test_df[self.target_col] = y_test
+            train_df = x_train.copy().reset_index(drop=True)
+            train_df[self.target_col] = y_train.reset_index(drop=True)
+
+            test_df = x_test.copy().reset_index(drop=True)
+            test_df[self.target_col] = y_test.reset_index(drop=True)
 
             self.save_data(train_df, paths.PROCESSED_TRAIN_DATA_PATH)
             self.save_data(test_df, paths.PROCESSED_TEST_DATA_PATH)

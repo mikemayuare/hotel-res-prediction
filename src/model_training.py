@@ -88,11 +88,9 @@ class ModelTraining:
 
             # predict and evaluate
             preds = gbm.predict(self.x_val)
-            pred_labels = np.rint(preds)
+            pred_labels = (preds > 0.5).astype(int)
 
-            acc = accuracy_score(self.y_val, pred_labels)
-
-            return acc
+            return f1_score(self.y_val, pred_labels)
 
         except Exception as e:
             logger.error("%s - Error while tuning", e)
@@ -111,10 +109,9 @@ class ModelTraining:
                 self.x_val, label=self.y_val, categorical_feature=cat_cols
             )
             study = optuna.create_study(direction="maximize")
-            study.optimize(self.objective, n_trials=50, show_progress_bar=True)
+            study.optimize(self.objective, n_trials=100, show_progress_bar=True)
 
             params = study.best_params
-            params["boosting_type"] = "dart"
 
             self.model = lgb.train(
                 params,
@@ -135,12 +132,18 @@ class ModelTraining:
             logger.info("Evaluating model")
 
             y_pred = self.model.predict(self.x_test)
-            y_pred = np.rint(y_pred)
+            y_pred = (y_pred > 0.5).astype(int)
+            print("Unique in y_test:", np.unique(self.y_test))
+            print("Unique in y_pred:", np.unique(y_pred))
 
             self.accuracy = accuracy_score(self.y_test, y_pred)
-            self.precision = precision_score(self.y_test, y_pred)
-            self.recall = recall_score(self.y_test, y_pred)
-            self.f1 = f1_score(self.y_test, y_pred)
+            self.precision = precision_score(
+                self.y_test, y_pred, average="binary", labels=[0, 1]
+            )
+            self.recall = recall_score(
+                self.y_test, y_pred, average="binary", labels=[0, 1]
+            )
+            self.f1 = f1_score(self.y_test, y_pred, average="binary", labels=[0, 1])
 
             logger.info("Accuracy %s", self.accuracy)
             logger.info("Precision %s", self.precision)
