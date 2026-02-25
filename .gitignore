@@ -1,6 +1,8 @@
 # Created by https://gitignore.org
 # Python.gitignore
 
+# artifacts
+artifacts/
 # credentials
 credentials
 
