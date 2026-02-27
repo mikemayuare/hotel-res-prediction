@@ -2,7 +2,9 @@
 # Python.gitignore
 
 # artifacts
+mlruns/
 artifacts/
+mlflow.db
 # credentials
 credentials
 

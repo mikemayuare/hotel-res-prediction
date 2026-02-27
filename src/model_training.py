@@ -1,20 +1,21 @@
 from pathlib import Path
-import pandas as pd
-import numpy as np
+
 import joblib
-import optuna
-import sklearn
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import lightgbm as lgb
+import mlflow
+import mlflow.sklearn
+import numpy as np
+import optuna
+import pandas as pd
+from optuna.integration import LightGBMPruningCallback
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
-from src.logger import get_logger
-from src.custom_exceptions import CustomException
+
 from config import paths_config as pc
 from config.model_params import lgbm_search_space
-from utils.common_functions import read_yaml, load_data
-from optuna.integration import LightGBMPruningCallback
-from optuna.exceptions import TrialPruned
-
+from src.custom_exceptions import CustomException
+from src.logger import get_logger
+from utils.common_functions import load_data, read_yaml
 
 logger = get_logger(__name__)
 
@@ -145,6 +146,13 @@ class ModelTraining:
             )
             self.f1 = f1_score(self.y_test, y_pred, average="binary", labels=[0, 1])
 
+            self.metrics = {
+                "accuracy": self.accuracy,
+                "precision": self.precision,
+                "recall": self.recall,
+                "f1": self.f1,
+            }
+
             logger.info("Accuracy %s", self.accuracy)
             logger.info("Precision %s", self.precision)
             logger.info("Recall %s", self.recall)
@@ -167,19 +175,31 @@ class ModelTraining:
 
     def run_training_pipeline(self):
         try:
-            logger.info("Running training pipeline")
+            with mlflow.start_run():
+                logger.info("Running training pipeline")
+                logger.info("Running MLFlow tracking")
+                logger.info("Logging datasets to MLFlow")
+                mlflow.log_artifact(self.train_path, artifact_path="datasets")
+                mlflow.log_artifact(self.test_path, artifact_path="datasets")
 
-            # LOAD DATA #
-            self.load_and_split()
+                # LOAD DATA #
+                self.load_and_split()
 
-            # TRAIN DATA #
-            self.train_model()
+                # TRAIN DATA #
+                self.train_model()
 
-            # EVALUATE DATA #
-            self.model_evaluation()
+                # EVALUATE DATA #
+                self.model_evaluation()
 
-            # SAVE MODEL #
-            self.save_model()
+                # SAVE MODEL #
+                self.save_model()
+                logger.info("Logging model to MLFlow")
+                mlflow.log_artifact(self.model_output_path, artifact_path="models")
+                logger.info("Logging model parameters to MLFlow")
+                mlflow.log_params(self.model.params)
+                logger.info("Logging metrics to MLFlow")
+                mlflow.log_metrics(self.metrics)
+                print(f"Tracking URI: {mlflow.get_tracking_uri()}")
 
         except Exception as e:
             logger.error("%s - Error during pipeline", str(e))

@@ -8,6 +8,7 @@ dependencies = [
     "google-cloud-storage>=3.3.1",
     "imbalanced-learn>=0.14.0",
     "lightgbm>=4.6.0",
+    "mlflow>=3.10.0",
     "optuna>=4.5.0",
     "optuna-integration>=4.5.0",
     "pandas>=2.3.2",
