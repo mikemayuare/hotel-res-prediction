@@ -3,7 +3,6 @@ from pathlib import Path
 import joblib
 import lightgbm as lgb
 import mlflow
-import mlflow.sklearn
 import numpy as np
 import optuna
 import pandas as pd
@@ -175,6 +174,7 @@ class ModelTraining:
 
     def run_training_pipeline(self):
         try:
+            mlflow.set_experiment("LGBM-Hotel-Reservation-Prediction")
             with mlflow.start_run():
                 logger.info("Running training pipeline")
                 logger.info("Running MLFlow tracking")
